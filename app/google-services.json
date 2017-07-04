@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "964306044777",
+    "firebase_url": "https://ircopensource.firebaseio.com",
+    "project_id": "ircopensource",
+    "storage_bucket": "ircopensource.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964306044777:android:b5d5a9c4001bfa91",
+        "android_client_info": {
+          "package_name": "com.example.ta.ircopensource"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "964306044777-e040rqfg4dcsk9inme3i3j35gcla0smb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ta.ircopensource",
+            "certificate_hash": "3847f8b798db8cef299a9573c955bfb52325ee30"
+          }
+        },
+        {
+          "client_id": "964306044777-o0e2p1ft7vjhfkmapp05o633mibrjlan.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD28NWMtejuSRSoW3gMiH9hSI-L1DmLbh8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "964306044777-o0e2p1ft7vjhfkmapp05o633mibrjlan.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

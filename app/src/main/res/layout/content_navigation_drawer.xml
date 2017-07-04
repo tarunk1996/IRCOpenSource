@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.example.ta.ircopensource.NavigationDrawer"
+    tools:showIn="@layout/app_bar_navigation_drawer">
+
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="com.example.ta.ircopensource.MainActivity">
+
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:src="@drawable/ic_send_black_24dp"
+            android:id="@+id/fab"
+            android:tint="@android:color/white"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="2dp"
+            app:fabSize="mini" />
+
+
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:src="@drawable/ic_mic_black_24dp"
+            android:id="@+id/speech"
+            android:tint="@android:color/white"
+            android:layout_toLeftOf="@id/fab"
+            android:layout_marginRight="2dp"
+            android:layout_alignParentBottom="true"
+            app:fabSize="mini" />
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/speech"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true">
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Input"
+                android:id="@+id/input"
+                />
+        </android.support.design.widget.TextInputLayout>
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:layout_above="@id/fab"
+            android:layout_marginTop="5dp"
+            android:dividerHeight="16dp"
+            android:divider="@android:color/transparent"
+            android:id="@+id/list_of_messages"
+            android:layout_marginBottom="16dp"/>
+
+    </RelativeLayout>
+
+
+
+</android.support.constraint.ConstraintLayout>
