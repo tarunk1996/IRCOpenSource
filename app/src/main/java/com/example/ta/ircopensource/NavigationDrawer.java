@@ -2,12 +2,20 @@ package com.example.ta.ircopensource;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -20,6 +28,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +58,7 @@ public class NavigationDrawer extends AppCompatActivity
 
 
     private static final int SIGN_IN_REQUEST_CODE = 1;
+    private static final int RESULT_LOAD_IMAGE = 2 ;
     private FirebaseListAdapter<ChatMessage> adapter;
 
     private static final int REQ_CODE_SPEECH_INPUT = 100;
@@ -57,6 +67,10 @@ public class NavigationDrawer extends AppCompatActivity
     private String currentChat;
     boolean flag=false;
 
+    LinearLayout linerLayout;
+
+    //SharedPreferences.Editor mEditor;
+    SharedPreferences mPrefs;
 
     private EditText input;
 
@@ -67,26 +81,18 @@ public class NavigationDrawer extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        mPrefs = this.getSharedPreferences("label", 0);
+        String mString = mPrefs.getString("background", "NO");
+
+
         currentChat = "general";
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-
-
-
-
-        //navigationView.addHeaderView(nav_header);
-
-        input = (EditText) findViewById(R.id.input);
         if(FirebaseAuth.getInstance().getCurrentUser() == null) {
             // Start sign in/sign up activity
             startActivityForResult(
                     AuthUI.getInstance().createSignInIntentBuilder().build(),
                     SIGN_IN_REQUEST_CODE
             );
+
         } else {
             // User is already signed in. Therefore, display
             // a welcome Toast
@@ -96,71 +102,104 @@ public class NavigationDrawer extends AppCompatActivity
                             .getDisplayName(),
                     Toast.LENGTH_LONG)
                     .show();
-
-            displayChatMessages();
+            loadHearder();
         }
 
 
+        linerLayout = (LinearLayout) findViewById(R.id.linearlay) ;
 
-        speech = (FloatingActionButton) findViewById(R.id.speech);
+        //String picturePath = DataManager.getInstance().getImageUrl();
+        if(mString == "NO" ){
+            getWindow().setBackgroundDrawableResource(R.drawable.chat_background) ;
+            //Set some default image that will be visible before selecting image
+        }else{
+            Log.v("Check","Working"+mString);
+            Bitmap bitmap = BitmapFactory.decodeFile(mString);
+            BitmapDrawable background = new BitmapDrawable(bitmap);
+            //View view = (View) findViewById(R.layout.content_navigation_drawer);
+            //linerLayout.setBackgroundDrawable(background);
+            getWindow().setBackgroundDrawable(background);
+        }
 
-        speech.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+            currentChat = "general";
+
+            displayChatMessages();
+
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                    this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            drawer.setDrawerListener(toggle);
+            toggle.syncState();
 
 
-                Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-                intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Hello, How can I help you?");
-                try {
-                    startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
-                } catch (ActivityNotFoundException a) {
+            //navigationView.addHeaderView(nav_header);
+
+            input = (EditText) findViewById(R.id.input);
+
+
+            speech = (FloatingActionButton) findViewById(R.id.speech);
+
+            speech.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+
+                    Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+                    intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Hello, How can I help you?");
+                    try {
+                        startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
+                    } catch (ActivityNotFoundException a) {
+
+                    }
 
                 }
+            });
 
-            }
-        });
+            final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //input = (EditText)findViewById(R.id.input);
 
-        final FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //input = (EditText)findViewById(R.id.input);
+                    if(!input.getText().toString().matches("")) {
+                        // Read the input field and push a new instance
+                        // of ChatMessage to the Firebase database
+                        FirebaseDatabase.getInstance()
+                                .getReference().child(currentChat)
+                                .push()
+                                .setValue(new ChatMessage(input.getText().toString(),
+                                        FirebaseAuth.getInstance()
+                                                .getCurrentUser()
+                                                .getDisplayName())
+                                );
 
-                // Read the input field and push a new instance
-                // of ChatMessage to the Firebase database
-                FirebaseDatabase.getInstance()
-                        .getReference().child(currentChat)
-                        .push()
-                        .setValue(new ChatMessage(input.getText().toString(),
-                                FirebaseAuth.getInstance()
-                                        .getCurrentUser()
-                                        .getDisplayName())
-                        );
-
-                // Clear the input
-                input.setText("");
-            }
-        });
+                    }
+                    // Clear the input
+                    input.setText("");
+                }
+            });
 
 
+
+
+
+
+    }
+
+    private void loadHearder() {
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         ColorGenerator generator = ColorGenerator.MATERIAL;
-        int color = generator.getColor(FirebaseAuth.getInstance().getCurrentUser().getDisplayName().substring(0,1));
+        int color = generator.getColor(FirebaseAuth.getInstance().getCurrentUser().getDisplayName().substring(0, 1));
         TextDrawable drawable = TextDrawable.builder()
-                .buildRound(FirebaseAuth.getInstance().getCurrentUser().getDisplayName().substring(0,1), color);
+                .buildRound(FirebaseAuth.getInstance().getCurrentUser().getDisplayName().substring(0, 1), color);
         View nav_header = LayoutInflater.from(this).inflate(R.layout.nav_header_navigation_drawer, null);
         ((TextView) nav_header.findViewById(R.id.name)).setText(FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
         ((TextView) nav_header.findViewById(R.id.email)).setText(FirebaseAuth.getInstance().getCurrentUser().getEmail());
         ((ImageView) nav_header.findViewById(R.id.imageView)).setImageDrawable(drawable);
         navigationView.addHeaderView(nav_header);
         navigationView.setNavigationItemSelectedListener(this);
-
-
-
-
-
     }
 
 
@@ -177,8 +216,13 @@ public class NavigationDrawer extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
+
+
+
         getMenuInflater().inflate(R.menu.navigation_drawer, menu);
         getMenuInflater().inflate(R.menu.main_menu, menu);
+
+
         return true;
     }
 
@@ -201,6 +245,7 @@ public class NavigationDrawer extends AppCompatActivity
                         "Successfully signed in. Welcome!",
                         Toast.LENGTH_LONG)
                         .show();
+                loadHearder();
                 displayChatMessages();
             } else {
                 Toast.makeText(this,
@@ -213,6 +258,35 @@ public class NavigationDrawer extends AppCompatActivity
             }
         }
 
+        if(requestCode == RESULT_LOAD_IMAGE)
+        {
+            super.onActivityResult(requestCode, resultCode, data);
+            if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
+                Uri selectedImage = data.getData();
+                String[] filePathColumn = { MediaStore.Images.Media.DATA };
+                Cursor cursor = getContentResolver().query(selectedImage,filePathColumn, null, null, null);
+                cursor.moveToFirst();
+                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                String picturePath = cursor.getString(columnIndex);
+                DataManager.getInstance().setImageUrl(picturePath);
+                cursor.close();
+                Bitmap bitmap = BitmapFactory.decodeFile(picturePath);
+                BitmapDrawable background = new BitmapDrawable(bitmap);
+                //View view = (View) findViewById(R.layout.content_navigation_drawer);
+                //linerLayout.setBackgroundDrawable(background);
+                getWindow().setBackgroundDrawable(background);
+                mPrefs.edit().putString("background", picturePath.toString()).commit();
+                //mEditor = mPrefs.edit();
+                //mEditor.putString("background", picturePath).commit();
+            }
+            //Recreate this Activity
+
+            //startActivity(new Intent(this,NavigationDrawer.class));
+        }
+
+
+
+
     }
 
 
@@ -224,6 +298,7 @@ public class NavigationDrawer extends AppCompatActivity
                 R.layout.message, FirebaseDatabase.getInstance().getReference().child(currentChat)) {
             @Override
             protected void populateView(View v, ChatMessage model, int position) {
+
                 // Get references to the views of message.xml
                 TextView messageText = (TextView)v.findViewById(R.id.message_text);
                 TextView messageUser = (TextView)v.findViewById(R.id.message_user);
@@ -238,11 +313,14 @@ public class NavigationDrawer extends AppCompatActivity
 
                 image.setImageDrawable(drawable);
 
+
                 // Set their text
                 messageText.setText(model.getMessageText());
                 messageUser.setText(model.getMessageUser());
-                messageTime.setText(DateFormat.format("dd-MM-yyyy (HH:mm:ss)",
+                messageUser.setTextColor(color);
+                messageTime.setText(DateFormat.format("dd-MM (hh:mm a)",
                         model.getMessageTime()));
+
             }
         };
 
@@ -274,6 +352,10 @@ public class NavigationDrawer extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+
+            Intent i = new
+                    Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(i, RESULT_LOAD_IMAGE);
             return true;
         }
 
@@ -301,4 +383,7 @@ public class NavigationDrawer extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
+
 }
+
